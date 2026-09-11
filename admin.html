@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Адмін-панель — Карта Інгулки
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    />
+
+
+    <style>
+
+        html,
+        body {
+
+            margin: 0;
+            padding: 0;
+
+            height: 100%;
+
+            font-family: sans-serif;
+
+            background: #121212;
+
+            color: #fff;
+
+            overflow: hidden;
+        }
+
+
+        #app {
+
+            display: flex;
+
+            width: 100vw;
+
+            height: 100vh;
+        }
+
+
+        #sidebar {
+
+            width: 380px;
+
+            min-width: 380px;
+
+            padding: 20px;
+
+            background: #1a1a1a;
+
+            border-right: 1px solid #333;
+
+            overflow-y: auto;
+
+            box-sizing: border-box;
+
+            z-index: 2000;
+        }
+
+
+        #map {
+
+            flex: 1;
+
+            height: 100vh;
+
+            width: 100%;
+
+            background: #000;
+        }
+
+
+        h2 {
+
+            margin-top: 0;
+
+            font-size: 18px;
+
+            color: #fff;
+
+            border-bottom:
+                1px solid #333;
+
+            padding-bottom: 10px;
+        }
+
+
+        .form-group {
+
+            margin-bottom: 15px;
+        }
+
+
+        label {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 12px;
+
+            color: #aaa;
+
+            text-transform: uppercase;
+        }
+
+
+        input,
+        select,
+        textarea,
+        button {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border-radius: 6px;
+
+            border:
+                1px solid #333;
+
+            background: #262626;
+
+            color: #fff;
+
+            box-sizing: border-box;
+
+            font-size: 14px;
+        }
+
+
+        textarea {
+
+            height: 70px;
+
+            resize: vertical;
+        }
+
+
+        button {
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            margin-top: 5px;
+        }
+
+
+        button:disabled {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+        }
+
+
+        .btn-add {
+
+            background: #28a745;
+
+            border: none;
+        }
+
+
+        .item-list {
+
+            margin-top: 20px;
+
+            border-top:
+                1px solid #333;
+
+            padding-top: 15px;
+        }
+
+
+        .data-item {
+
+            background: #222;
+
+            border:
+                1px solid #333;
+
+            border-radius: 6px;
+
+            padding: 10px;
+
+            margin-bottom: 10px;
+
+            font-size: 13px;
+        }
+
+
+        .data-item-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            gap: 8px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .btn-del {
+
+            width: auto;
+
+            padding:
+                4px 8px;
+
+            background:
+                #dc3545;
+
+            border: none;
+
+            font-size: 11px;
+
+            flex-shrink: 0;
+        }
+
+
+        .emoji-marker {
+
+            background:
+                rgba(30,30,30,0.9);
+
+            border:
+                2px solid #fff;
+
+            border-radius: 50%;
+
+            text-align: center;
+
+            line-height: 32px;
+
+            font-size: 18px;
+        }
+
+
+        .shape-info {
+
+            background:
+                #1e3a1e;
+
+            border:
+                1px solid #28a745;
+
+            padding: 8px;
+
+            border-radius: 4px;
+
+            font-size: 12px;
+
+            color: #85d985;
+
+            margin-bottom: 10px;
+        }
+
+
+        .error-info {
+
+            background:
+                #3a1e1e;
+
+            border:
+                1px solid #dc3545;
+
+            padding: 8px;
+
+            border-radius: 4px;
+
+            font-size: 12px;
+
+            color: #ff9999;
+
+            margin-bottom: 10px;
+        }
+
+
+        .success-info {
+
+            background:
+                #1e3a1e;
+
+            border:
+                1px solid #28a745;
+
+            padding: 8px;
+
+            border-radius: 4px;
+
+            font-size: 12px;
+
+            color: #85d985;
+
+            margin-bottom: 10px;
+        }
+
+
+        .small-text {
+
+            color: #888;
+
+            font-size: 11px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div id="app">
+
+
+    <div id="sidebar">
+
+
+        <h2>
+            Управління мітками та фігурами
+        </h2>
+
+
+        <div
+            id="message-box"
+            style="display:none;"
+        ></div>
+
+
+        <form id="marker-form">
+
+
+            <div class="form-group">
+
+                <label for="cat-select">
+                    Категорія
+                </label>
+
+                <select
+                    id="cat-select"
+                ></select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="input-desc">
+                    Опис
+                </label>
+
+                <textarea
+                    id="input-desc"
+                    placeholder="Введіть опис..."
+                ></textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="input-radius">
+                    Радіус круга (метри)
+                </label>
+
+                <input
+                    type="number"
+                    id="input-radius"
+                    value="0"
+                    min="0"
+                    step="10"
+                >
+
+                <div class="small-text">
+                    Для фігури GeoJSON радіус автоматично = 0.
+                </div>
+
+            </div>
+
+
+            <div
+                id="shape-status"
+                class="shape-info"
+                style="display:none;"
+            >
+
+                📐 Намальовано фігуру.
+
+                Круг буде вимкнено.
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Центральні координати
+                </label>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:5px;
+                    "
+                >
+
+                    <input
+                        type="text"
+                        id="input-lat"
+                        placeholder="Широта"
+                        readonly
+                        required
+                    >
+
+
+                    <input
+                        type="text"
+                        id="input-lng"
+                        placeholder="Довгота"
+                        readonly
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <input
+                type="hidden"
+                id="input-geojson"
+            >
+
+
+            <button
+                type="submit"
+                class="btn-add"
+                id="btn-submit"
+            >
+
+                ➕ Додати об'єкт на сервер
+
+            </button>
+
+
+        </form>
+
+
+        <div class="item-list">
+
+            <h2>
+
+                База даних
+                (<span id="items-count">0</span>)
+
+            </h2>
+
+
+            <div id="items-container">
+
+                Завантаження...
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <div id="map"></div>
+
+
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+></script>
+
+
+<script>
+
+
+/* ==========================================
+   API
+   ========================================== */
+
+const API_URL =
+    "https://script.google.com/macros/s/AKfycbya9RPDtVyLlFeMccrNy9eC9yReqKkJLiQjDYvdUD6n6aoDs9APYsA_tEoP3nJtVMtEhg/exec";
+
+
+/* ==========================================
+   КАТЕГОРИИ
+   ========================================== */
+
+const categories = {
+
+
+    "1": {
+
+        name:
+            "🚨 Повітряна тривога",
+
+        emoji:
+            "🚨",
+
+        defaultRadius:
+            3000,
+
+        color:
+            "#ff4d4d"
+    },
+
+
+    "2": {
+
+        name:
+            "✈️ Літає / Авіація",
+
+        emoji:
+            "✈️",
+
+        defaultRadius:
+            2500,
+
+        color:
+            "#ff9900"
+    },
+
+
+    "3": {
+
+        name:
+            "🔥 Вогонь / Пожежа",
+
+        emoji:
+            "🔥",
+
+        defaultRadius:
+            800,
+
+        color:
+            "#ff6600"
+    },
+
+
+    "4": {
+
+        name:
+            "🚓 ТЦК чи менти",
+
+        emoji:
+            "🚓",
+
+        defaultRadius:
+            500,
+
+        color:
+            "#3388ff"
+    },
+
+
+    "5": {
+
+        name:
+            "💥 ДТП",
+
+        emoji:
+            "💥",
+
+        defaultRadius:
+            300,
+
+        color:
+            "#e60000"
+    },
+
+
+    "6": {
+
+        name:
+            "🚧 Перекрито",
+
+        emoji:
+            "🚧",
+
+        defaultRadius:
+            50,
+
+        color:
+            "#ffff00"
+    },
+
+
+    "7": {
+
+        name:
+            "🪚 Побут",
+
+        emoji:
+            "🪚",
+
+        defaultRadius:
+            0,
+
+        color:
+            "#888888"
+    },
+
+
+    "8": {
+
+        name:
+            "🌊 Болото",
+
+        emoji:
+            "🌊",
+
+        defaultRadius:
+            50,
+
+        color:
+            "#00cccc"
+    },
+
+
+    "9": {
+
+        name:
+            "🚑 Екстрені машини",
+
+        emoji:
+            "🚑",
+
+        defaultRadius:
+            500,
+
+        color:
+            "#ff3399"
+    },
+
+
+    "10": {
+
+        name:
+            "⚰️ Шана / Похорон",
+
+        emoji:
+            "⚰️",
+
+        defaultRadius:
+            0,
+
+        color:
+            "#888888"
+    },
+
+
+    "11": {
+
+        name:
+            "🎉 Події",
+
+        emoji:
+            "🎉",
+
+        defaultRadius:
+            0,
+
+        color:
+            "#9933ff"
+    },
+
+
+    "12": {
+
+        name:
+            "💡 Відключений світ",
+
+        emoji:
+            "💡",
+
+        defaultRadius:
+            500,
+
+        color:
+            "#ffd700"
+    },
+
+
+    "13": {
+
+        name:
+            "📰 Новини",
+
+        emoji:
+            "📰",
+
+        defaultRadius:
+            500,
+
+        color:
+            "#ffd700"
+    }
+
+
+};
+
+
+/* ==========================================
+   MAP
+   ========================================== */
+
+const map =
+    L.map("map")
+        .setView(
+            [47.1648, 32.1481],
+            14
+        );
+
+
+L.tileLayer(
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom: 19,
+
+        attribution:
+            "&copy; OpenStreetMap"
+    }
+).addTo(map);
+
+
+/* ==========================================
+   VARIABLES
+   ========================================== */
+
+let rawData = [];
+
+let adminLayers = [];
+
+let previewMarker = null;
+
+let previewCircle = null;
+
+
+const drawnItems =
+    new L.FeatureGroup();
+
+
+map.addLayer(
+    drawnItems
+);
+
+
+/* ==========================================
+   DRAW
+   ========================================== */
+
+const drawControl =
+    new L.Control.Draw({
+
+        draw: {
+
+            polygon: true,
+
+            polyline: true,
+
+            rectangle: true,
+
+            circle: false,
+
+            circlemarker: false,
+
+            marker: false
+        },
+
+        edit: {
+
+            featureGroup:
+                drawnItems,
+
+            remove: true
+        }
+
+    });
+
+
+map.addControl(
+    drawControl
+);
+
+
+/* ==========================================
+   SELECT
+   ========================================== */
+
+const select =
+    document.getElementById(
+        "cat-select"
+    );
+
+
+for (
+    const key in categories
+) {
+
+    const option =
+        document.createElement(
+            "option"
+        );
+
+
+    option.value =
+        key;
+
+
+    option.textContent =
+        categories[key].name;
+
+
+    select.appendChild(
+        option
+    );
+}
+
+
+/* ==========================================
+   MESSAGE
+   ========================================== */
+
+function showMessage(
+    text,
+    type = "success"
+) {
+
+    const box =
+        document.getElementById(
+            "message-box"
+        );
+
+
+    box.className =
+        type === "error"
+            ? "error-info"
+            : "success-info";
+
+
+    box.textContent =
+        text;
+
+
+    box.style.display =
+        "block";
+
+
+    setTimeout(
+        () => {
+
+            box.style.display =
+                "none";
+
+        },
+        4000
+    );
+}
+
+
+/* ==========================================
+   CATEGORY CHANGE
+   ========================================== */
+
+function onCategoryChange() {
+
+    const geojson =
+        document.getElementById(
+            "input-geojson"
+        ).value;
+
+
+    if (geojson) {
+        return;
+    }
+
+
+    const cat =
+        categories[
+            select.value
+        ];
+
+
+    if (!cat) {
+        return;
+    }
+
+
+    document.getElementById(
+        "input-radius"
+    ).value =
+        cat.defaultRadius;
+
+
+    updatePreviewRadius();
+}
+
+
+/* ==========================================
+   RADIUS CHANGE
+   ========================================== */
+
+function onRadiusManualInput() {
+
+    const geojson =
+        document.getElementById(
+            "input-geojson"
+        ).value;
+
+
+    if (geojson) {
+
+        document.getElementById(
+            "input-geojson"
+        ).value =
+            "";
+
+
+        document.getElementById(
+            "shape-status"
+        ).style.display =
+            "none";
+
+
+        drawnItems.clearLayers();
+    }
+
+
+    updatePreviewRadius();
+}
+
+
+/* ==========================================
+   MAP CLICK
+   ========================================== */
+
+map.on(
+    "click",
+    function(e) {
+
+        const geojson =
+            document.getElementById(
+                "input-geojson"
+            ).value;
+
+
+        if (geojson) {
+            return;
+        }
+
+
+        document.getElementById(
+            "input-lat"
+        ).value =
+            e.latlng.lat.toFixed(6);
+
+
+        document.getElementById(
+            "input-lng"
+        ).value =
+            e.latlng.lng.toFixed(6);
+
+
+        if (previewMarker) {
+
+            map.removeLayer(
+                previewMarker
+            );
+        }
+
+
+        previewMarker =
+            L.marker(
+                e.latlng
+            ).addTo(map);
+
+
+        updatePreviewRadius();
+    }
+);
+
+
+/* ==========================================
+   PREVIEW CIRCLE
+   ========================================== */
+
+function updatePreviewRadius() {
+
+    if (previewCircle) {
+
+        map.removeLayer(
+            previewCircle
+        );
+
+        previewCircle =
+            null;
+    }
+
+
+    const geojson =
+        document.getElementById(
+            "input-geojson"
+        ).value;
+
+
+    if (geojson) {
+        return;
+    }
+
+
+    const lat =
+        parseFloat(
+            document.getElementById(
+                "input-lat"
+            ).value
+        );
+
+
+    const lng =
+        parseFloat(
+            document.getElementById(
+                "input-lng"
+            ).value
+        );
+
+
+    const radius =
+        parseFloat(
+            document.getElementById(
+                "input-radius"
+            ).value
+        ) || 0;
+
+
+    const cat =
+        categories[
+            select.value
+        ];
+
+
+    const color =
+        cat
+            ? cat.color
+            : "#ff0000";
+
+
+    if (
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        radius > 0
+    ) {
+
+        previewCircle =
+            L.circle(
+                [lat, lng],
+                {
+
+                    color:
+                        color,
+
+                    fillColor:
+                        color,
+
+                    fillOpacity:
+                        0.25,
+
+                    radius:
+                        radius
+                }
+            ).addTo(map);
+    }
+}
+
+
+/* ==========================================
+   DRAW CREATED
+   ========================================== */
+
+map.on(
+    L.Draw.Event.CREATED,
+    function(e) {
+
+        drawnItems.clearLayers();
+
+
+        const layer =
+            e.layer;
+
+
+        drawnItems.addLayer(
+            layer
+        );
+
+
+        const geojson =
+            layer.toGeoJSON();
+
+
+        document.getElementById(
+            "input-geojson"
+        ).value =
+            JSON.stringify(
+                geojson
+            );
+
+
+        document.getElementById(
+            "input-radius"
+        ).value =
+            0;
+
+
+        document.getElementById(
+            "shape-status"
+        ).style.display =
+            "block";
+
+
+        if (previewCircle) {
+
+            map.removeLayer(
+                previewCircle
+            );
+
+            previewCircle =
+                null;
+        }
+
+
+        let center = null;
+
+
+        if (
+            typeof layer.getBounds ===
+            "function"
+        ) {
+
+            const bounds =
+                layer.getBounds();
+
+
+            if (
+                bounds.isValid()
+            ) {
+
+                center =
+                    bounds.getCenter();
+            }
+
+        } else if (
+            typeof layer.getLatLng ===
+            "function"
+        ) {
+
+            center =
+                layer.getLatLng();
+        }
+
+
+        if (center) {
+
+            document.getElementById(
+                "input-lat"
+            ).value =
+                center.lat.toFixed(6);
+
+
+            document.getElementById(
+                "input-lng"
+            ).value =
+                center.lng.toFixed(6);
+        }
+    }
+);
+
+
+/* ==========================================
+   LOAD DATA
+   ========================================== */
+
+async function loadData() {
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "?t=" +
+                Date.now()
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !Array.isArray(data)
+        ) {
+
+            throw new Error(
+                data.message ||
+                "API вернуло неправильные данные"
+            );
+        }
+
+
+        rawData =
+            data;
+
+
+        renderAdminList();
+
+
+    } catch(error) {
+
+        console.error(
+            error
+        );
+
+
+        document.getElementById(
+            "items-container"
+        ).innerHTML =
+
+            `<div class="error-info">
+                Не вдалося завантажити базу.<br>
+                ${escapeHtml(error.message)}
+            </div>`;
+    }
+}
+
+
+/* ==========================================
+   RENDER
+   ========================================== */
+
+function renderAdminList() {
+
+    adminLayers.forEach(
+        layer => {
+
+            if (
+                map.hasLayer(layer)
+            ) {
+
+                map.removeLayer(
+                    layer
+                );
+            }
+        }
+    );
+
+
+    adminLayers =
+        [];
+
+
+    const container =
+        document.getElementById(
+            "items-container"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    document.getElementById(
+        "items-count"
+    ).textContent =
+        rawData.length;
+
+
+    rawData.forEach(
+        item => {
+
+            const cat =
+                categories[item.type]
+                || {
+
+                    name:
+                        "📍 Невідомо",
+
+                    emoji:
+                        "📍",
+
+                    color:
+                        "#ffffff",
+
+                    defaultRadius:
+                        0
+                };
+
+
+            const geojsonValue =
+                item.geojson !== undefined &&
+                item.geojson !== null
+                    ? String(item.geojson)
+                    : "";
+
+
+            const hasGeoJson =
+                geojsonValue !== "" &&
+                geojsonValue !== "null" &&
+                geojsonValue !== "undefined";
+
+
+            let radius = 0;
+
+
+            if (
+                item.radius !== undefined &&
+                item.radius !== null &&
+                item.radius !== "" &&
+                !isNaN(
+                    Number(item.radius)
+                )
+            ) {
+
+                radius =
+                    Number(item.radius);
+            }
+
+
+            let actualGeoJson =
+                false;
+
+
+            /* ==============================
+               GEOJSON
+               ============================== */
+
+            if (hasGeoJson) {
+
+                try {
+
+                    const geoData =
+                        typeof item.geojson ===
+                        "string"
+
+                            ? JSON.parse(
+                                item.geojson
+                            )
+
+                            : item.geojson;
+
+
+                    const shape =
+                        L.geoJSON(
+                            geoData,
+                            {
+
+                                style: {
+
+                                    color:
+                                        cat.color,
+
+                                    fillColor:
+                                        cat.color,
+
+                                    fillOpacity:
+                                        0.3,
+
+                                    weight:
+                                        3
+                                }
+                            }
+                        )
+                        .bindPopup(
+                            `<b>
+                                ${escapeHtml(cat.name)}
+                            </b>
+                            <br>
+                            ${escapeHtml(item.desc || "")}`
+                        )
+                        .addTo(map);
+
+
+                    adminLayers.push(
+                        shape
+                    );
+
+
+                    actualGeoJson =
+                        true;
+
+
+                } catch(error) {
+
+                    console.error(
+                        "Ошибка GeoJSON:",
+                        error
+                    );
+                }
+            }
+
+
+            /* ==============================
+               CIRCLE
+               ============================== */
+
+            if (
+                !actualGeoJson &&
+                item.lat &&
+                item.lng &&
+                radius > 0
+            ) {
+
+                const circle =
+                    L.circle(
+                        [
+                            Number(item.lat),
+                            Number(item.lng)
+                        ],
+                        {
+
+                            color:
+                                cat.color,
+
+                            fillColor:
+                                cat.color,
+
+                            fillOpacity:
+                                0.2,
+
+                            radius:
+                                radius
+                        }
+                    )
+                    .bindPopup(
+                        `<b>
+                            ${escapeHtml(cat.name)}
+                        </b>
+                        <br>
+                        ${escapeHtml(item.desc || "")}
+                        <br>
+                        <span>
+                            Радіус: ${radius} м
+                        </span>`
+                    )
+                    .addTo(map);
+
+
+                adminLayers.push(
+                    circle
+                );
+            }
+
+
+            /* ==============================
+               MARKER
+               ============================== */
+
+            if (
+                item.lat &&
+                item.lng
+            ) {
+
+                const icon =
+                    L.divIcon({
+
+                        className:
+                            "emoji-marker",
+
+                        html:
+                            cat.emoji,
+
+                        iconSize:
+                            [32, 32],
+
+                        iconAnchor:
+                            [16, 16]
+                    });
+
+
+                const marker =
+                    L.marker(
+                        [
+                            Number(item.lat),
+                            Number(item.lng)
+                        ],
+                        {
+                            icon:
+                                icon
+                        }
+                    )
+                    .bindPopup(
+                        `<b>
+                            ${escapeHtml(cat.name)}
+                        </b>
+                        <br>
+                        ${escapeHtml(item.desc || "")}`
+                    )
+                    .addTo(map);
+
+
+                adminLayers.push(
+                    marker
+                );
+            }
+
+
+            /* ==============================
+               LIST
+               ============================== */
+
+            let objectType;
+
+
+            if (actualGeoJson) {
+
+                objectType =
+                    "📐 Фігура GeoJSON";
+
+            } else if (radius > 0) {
+
+                objectType =
+                    `⭕ Круг ${radius} м`;
+
+            } else {
+
+                objectType =
+                    "📍 Точка";
+            }
+
+
+            const itemElement =
+                document.createElement(
+                    "div"
+                );
+
+
+            itemElement.className =
+                "data-item";
+
+
+            itemElement.innerHTML = `
+
+                <div class="data-item-header">
+
+                    <b>
+
+                        ${cat.name}
+
+                        <br>
+
+                        <span class="small-text">
+                            ${objectType}
+                        </span>
+
+                    </b>
+
+
+                    <button
+                        class="btn-del"
+                        data-id="${escapeHtml(item.id)}"
+                    >
+                        Видалити
+                    </button>
+
+                </div>
+
+
+                <div>
+
+                    ${escapeHtml(
+                        item.desc ||
+                        "Без опису"
+                    )}
+
+                </div>
+
+
+                <div
+                    style="
+                        color:#888;
+                        font-size:11px;
+                        margin-top:5px;
+                    "
+                >
+
+                    📍
+                    ${item.lat},
+                    ${item.lng}
+
+                    <br>
+
+                    ID:
+                    ${escapeHtml(item.id)}
+
+                </div>
+            `;
+
+
+            itemElement
+                .querySelector(
+                    ".btn-del"
+                )
+                .addEventListener(
+                    "click",
+                    function() {
+
+                        deleteItem(
+                            item.id
+                        );
+                    }
+                );
+
+
+            container.appendChild(
+                itemElement
+            );
+
+        }
+    );
+}
+
+
+/* ==========================================
+   SUBMIT
+   ========================================== */
+
+document
+    .getElementById(
+        "marker-form"
+    )
+    .addEventListener(
+        "submit",
+        async function(e) {
+
+            e.preventDefault();
+
+
+            const btn =
+                document.getElementById(
+                    "btn-submit"
+                );
+
+
+            const lat =
+                parseFloat(
+                    document.getElementById(
+                        "input-lat"
+                    ).value
+                );
+
+
+            const lng =
+                parseFloat(
+                    document.getElementById(
+                        "input-lng"
+                    ).value
+                );
+
+
+            const type =
+                document.getElementById(
+                    "cat-select"
+                ).value;
+
+
+            const desc =
+                document.getElementById(
+                    "input-desc"
+                ).value;
+
+
+            const geojson =
+                document.getElementById(
+                    "input-geojson"
+                ).value;
+
+
+            let radius =
+                parseFloat(
+                    document.getElementById(
+                        "input-radius"
+                    ).value
+                ) || 0;
+
+
+            if (geojson) {
+
+                radius =
+                    0;
+            }
+
+
+            if (
+                !Number.isFinite(lat) ||
+                !Number.isFinite(lng)
+            ) {
+
+                showMessage(
+                    "Виберіть точку на карті або намалюйте фігуру.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            const id =
+                Date.now().toString();
+
+
+            const payload = {
+
+                action:
+                    "create",
+
+                id:
+                    id,
+
+                lat:
+                    lat,
+
+                lng:
+                    lng,
+
+                type:
+                    type,
+
+                desc:
+                    desc,
+
+                radius:
+                    radius,
+
+                geojson:
+                    geojson,
+
+                village:
+                    "ESO NET LIVE TEAM"
+            };
+
+
+            btn.disabled =
+                true;
+
+
+            btn.innerText =
+                "Збереження...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        API_URL,
+                        {
+
+                            method:
+                                "POST",
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (
+                    result.status !==
+                    "success"
+                ) {
+
+                    throw new Error(
+                        result.message ||
+                        "Сервер повернув помилку"
+                    );
+                }
+
+
+                showMessage(
+                    "Об'єкт успішно збережено."
+                );
+
+
+                resetForm();
+
+
+                await loadData();
+
+
+            } catch(error) {
+
+                console.error(
+                    error
+                );
+
+
+                showMessage(
+                    "Помилка при збереженні: " +
+                    error.message,
+                    "error"
+                );
+
+
+            } finally {
+
+                btn.disabled =
+                    false;
+
+
+                btn.innerText =
+                    "➕ Додати об'єкт на сервер";
+            }
+
+        }
+    );
+
+
+/* ==========================================
+   DELETE
+   ========================================== */
+
+async function deleteItem(id) {
+
+    if (
+        !confirm(
+            "Видалити об'єкт з сервера?"
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+
+                    method:
+                        "POST",
+
+                    body:
+                        JSON.stringify({
+
+                            action:
+                                "delete",
+
+                            id:
+                                id
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            result.status !==
+            "success"
+        ) {
+
+            throw new Error(
+                result.message ||
+                "Не вдалося видалити"
+            );
+        }
+
+
+        showMessage(
+            "Об'єкт видалено."
+        );
+
+
+        await loadData();
+
+
+    } catch(error) {
+
+        console.error(
+            error
+        );
+
+
+        showMessage(
+            "Помилка при видаленні: " +
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/* ==========================================
+   RESET
+   ========================================== */
+
+function resetForm() {
+
+    document.getElementById(
+        "input-desc"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "input-lat"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "input-lng"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "input-geojson"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "shape-status"
+    ).style.display =
+        "none";
+
+
+    drawnItems.clearLayers();
+
+
+    if (previewMarker) {
+
+        map.removeLayer(
+            previewMarker
+        );
+
+        previewMarker =
+            null;
+    }
+
+
+    if (previewCircle) {
+
+        map.removeLayer(
+            previewCircle
+        );
+
+        previewCircle =
+            null;
+    }
+
+
+    onCategoryChange();
+}
+
+
+/* ==========================================
+   ESCAPE HTML
+   ========================================== */
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+}
+
+
+/* ==========================================
+   START
+   ========================================== */
+
+onCategoryChange();
+
+loadData();
+
+</script>
+
+</body>
+</html>
