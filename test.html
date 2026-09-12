@@ -3,39 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Radar</title>
+    <title>Radar</title>
 </head>
 <body>
-    <h1>Перевірка зв'язку з API</h1>
-    <div id="log" style="font-size: 1.5rem; font-weight: bold; color: darkorange;">Старт запиту...</div>
+    <div id="log">Завантаження...</div>
 
     <script>
-    // Жорстко прописана адреса, яка точно працює і не містить помилок склеювання
-    const correctUrl = "https://corsproxy.io";
+    function updateStatus(data) {
+        document.getElementById('log').innerText = "Дані отримано!";
+        console.log(data);
+    }
 
     async function loadNeptunAlerts() {
-        const logDiv = document.getElementById('log');
-        
         try {
-            console.log("НАДСИЛАЄМО ЗАПИТ НА:", correctUrl);
-            const response = await fetch(correctUrl);
-            
-            if (!response.ok) {
-                throw new Error(`Код помилки сервера: ${response.status}`);
-            }
-            
+            // 1. Читаємо посилання з вашого файлу
+            const txtResponse = await fetch('APISDSADASDASD.txt');
+            const NAHR_THREATS_URL = await txtResponse.text();
+
+            // 2. Прямий запит без проксі та без кодування
+            const response = await fetch(NAHR_THREATS_URL.trim());
             const data = await response.json();
             
-            logDiv.style.color = "green";
-            logDiv.innerText = "УРА! ЗВ'ЯЗОК Є, JSON ОТРИМАНО!";
-            console.log("=== ОТРИМАНІ ДАНІ ===");
-            console.log(data);
-            console.log("=====================");
-
+            updateStatus(data);
         } catch (error) {
-            logDiv.style.color = "red";
-            logDiv.innerText = "Помилка: " + error.message;
-            console.error("Помилка:", error);
+            document.getElementById('log').innerText = "Помилка: " + error.message;
+            console.error(error);
         }
     }
 
