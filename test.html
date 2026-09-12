@@ -18,7 +18,7 @@
     async function loadNeptunAlerts() {
         try {
             // Додаємо випадковий параметр ?v=, щоб змусити GitHub віддати СВІЖИЙ текстовий файл
-            const txtResponse = await fetch('./APISDSADASDASD.txt?v=' + Math.random());
+            const txtResponse = await fetch('./APISDSADASDASD.txt');
             const rawUrl = await txtResponse.text();
             const NAHR_THREATS_URL = rawUrl.trim();
 
