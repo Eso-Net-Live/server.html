@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar</title>
+    <title>Radar Fixed</title>
 </head>
 <body>
-    <div id="log">Завантаження...</div>
+    <div id="log">Завантаження даних...</div>
 
     <script>
     function updateStatus(data) {
@@ -17,18 +17,19 @@
 
     async function loadNeptunAlerts() {
         try {
-            // 1. Читаємо посилання з вашого текстового файлу
-            const txtResponse = await fetch('APISDSADASDASD.txt?v=' + Date.now());
+            // Додаємо випадковий параметр ?v=, щоб змусити GitHub віддати СВІЖИЙ текстовий файл
+            const txtResponse = await fetch('APISDSADASDASD.txt?v=' + Math.random());
             const rawUrl = await txtResponse.text();
             const NAHR_THREATS_URL = rawUrl.trim();
 
-            // 2. Відправляємо через надійний проксі (allorigins)
-            // Використовуємо правильну адресу api.allorigins.win/raw?url=
-            const proxyUrl = "https://allorigins.win" + encodeURIComponent(NAHR_THREATS_URL);
+            // Використовуємо інший проксі цільним рядком, щоб нічого не зклеювалось з помилками
+            const proxyUrl = "https://freeboard.io" + NAHR_THREATS_URL;
             
+            console.log("ЗАПИТ ВІДПРАВЛЕНО НА:", proxyUrl);
+
             const response = await fetch(proxyUrl);
             if (!response.ok) {
-                throw new Error(`Сервер повернув статус ${response.status}. Можливо, токен у файлі застарів.`);
+                throw new Error(`Статус: ${response.status}. Перевірте, чи токен у TXT файлі ще свіжий.`);
             }
 
             const data = await response.json();
@@ -36,7 +37,7 @@
 
         } catch (error) {
             document.getElementById('log').innerText = "Помилка: " + error.message;
-            console.error("Деталі помилки:", error);
+            console.error("Деталі:", error);
         }
     }
 
