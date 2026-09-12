@@ -10,24 +10,33 @@
 
     <script>
     function updateStatus(data) {
-        document.getElementById('log').innerText = "Дані отримано!";
+        document.getElementById('log').innerText = "Дані успішно отримано!";
+        console.log("=== ВАШ JSON ===");
         console.log(data);
     }
 
     async function loadNeptunAlerts() {
         try {
-            // 1. Читаємо посилання з вашого файлу
-            const txtResponse = await fetch('APISDSADASDASD.txt');
-            const NAHR_THREATS_URL = await txtResponse.text();
+            // 1. Читаємо посилання з вашого текстового файлу
+            const txtResponse = await fetch('APISDSADASDASD.txt?v=' + Date.now());
+            const rawUrl = await txtResponse.text();
+            const NAHR_THREATS_URL = rawUrl.trim();
 
-            // 2. Прямий запит без проксі та без кодування
-            const response = await fetch(NAHR_THREATS_URL.trim());
-            const data = await response.json();
+            // 2. Відправляємо через надійний проксі (allorigins)
+            // Використовуємо правильну адресу api.allorigins.win/raw?url=
+            const proxyUrl = "https://allorigins.win" + encodeURIComponent(NAHR_THREATS_URL);
             
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                throw new Error(`Сервер повернув статус ${response.status}. Можливо, токен у файлі застарів.`);
+            }
+
+            const data = await response.json();
             updateStatus(data);
+
         } catch (error) {
             document.getElementById('log').innerText = "Помилка: " + error.message;
-            console.error(error);
+            console.error("Деталі помилки:", error);
         }
     }
 
