@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Radar</title>
+</head>
+<body>
+    <h1>Перевірка зв'язку з API</h1>
+    <div id="log" style="font-size: 1.5rem; font-weight: bold; color: darkorange;">Старт запиту...</div>
+
+    <script>
+    // Жорстко прописана адреса, яка точно працює і не містить помилок склеювання
+    const correctUrl = "https://corsproxy.io";
+
+    async function loadNeptunAlerts() {
+        const logDiv = document.getElementById('log');
+        
+        try {
+            console.log("НАДСИЛАЄМО ЗАПИТ НА:", correctUrl);
+            const response = await fetch(correctUrl);
+            
+            if (!response.ok) {
+                throw new Error(`Код помилки сервера: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            logDiv.style.color = "green";
+            logDiv.innerText = "УРА! ЗВ'ЯЗОК Є, JSON ОТРИМАНО!";
+            console.log("=== ОТРИМАНІ ДАНІ ===");
+            console.log(data);
+            console.log("=====================");
+
+        } catch (error) {
+            logDiv.style.color = "red";
+            logDiv.innerText = "Помилка: " + error.message;
+            console.error("Помилка:", error);
+        }
+    }
+
+    loadNeptunAlerts();
+    </script>
+</body>
+</html>
